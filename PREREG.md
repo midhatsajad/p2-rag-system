@@ -24,7 +24,7 @@ One sentence, about your own corpus, naming two of your systems and a direction.
 For example: "On my corpus of Kubernetes documentation, `rerank` has a higher MRR@10 than `hybrid`, because the queries are paraphrases that a first-stage fusion ranks too low."
 It should be something you could be wrong about.
 
-TODO: your hypothesis.
+On my corpus of five USACE Engineer Manuals, rerank has a higher nDCG@10 than hybrid, because terms such as RQD appear in several manuals with different purposes, so the first stage ranks every passage that mentions the term, while only some of them answer what the query asks.
 
 ---
 
@@ -36,7 +36,9 @@ A difference of 0.02 is usually not worth a reranker's cost in time and tokens.
 In this course, choose a Δ of at least 0.15 unless you argue for a larger one, because a smaller gap takes more queries than one project can judge.
 Call your number Δ (delta).
 
-TODO: your metric and your Δ, with the reason.
+The metric is nDCG@10. Relevant passages for a cross-cutting query can sit in several manuals, and nDCG@10 credits ranking all of them well, where MRR@10 would count only the first.
+
+Δ is 0.15. On the shared corpus the reranker cost about 14,000 input tokens and 7 seconds per query (the cost table in EVAL.md section 8), against a few milliseconds for hybrid. A gain smaller than 0.15, roughly one relevant passage moving a few places on an average query, would not be worth that cost to someone searching these manuals.
 
 ---
 
@@ -65,7 +67,9 @@ After you score the own corpus, the minimum detectable difference that `uv run p
 It should come out at or below your Δ.
 If it does not, your queries varied more than your stage 1 sd suggested, and you will say so in the outcome.
 
-TODO: your sd, which pair it came from, your n, and the number of queries you will write (at least n).
+The sd comes from the same pair and metric on the shared practice queries: rerank minus hybrid, nDCG@10, sd = 0.31 (confirm against results/results.json).
+
+n = ((1.96 + 0.84) × 0.31 / 0.15)² ≈ 33.5, or about 36 with the small-sample correction. Because 20 practice queries give a noisy sd, and because my gold set will lean on cross-cutting queries more than the shared set did, I will write 40 queries, most of them on terms that appear in more than one manual.
 
 ---
 
@@ -82,7 +86,12 @@ This is the default rule, and you can tighten it, but do not loosen it after you
 | around zero, with both ends inside plus or minus Δ | well-powered null: a difference as large as Δ is ruled out |
 | around zero, with an end beyond plus or minus Δ | inconclusive: the gold set could not settle it, and I say so |
 
-TODO: confirm or tighten this rule, and name the two systems and the metric once more.
+The test is the paired 95% interval of rerank minus hybrid on nDCG@10, from the own-pairs table in EVAL.md. I keep the default rule:
+The interval is	I will say
+entirely above zero	supported: rerank’s higher nDCG@10 is distinguishable from zero
+entirely below zero	contradicted: hybrid ranks better than rerank on this gold set
+around zero, with both ends inside ±0.15	well-powered null: a difference as large as 0.15 is ruled out
+around zero, with an end beyond ±0.15	inconclusive: the gold set could not settle it, and I say so
 
 ---
 
