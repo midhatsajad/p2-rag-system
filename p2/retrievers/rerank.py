@@ -1,34 +1,75 @@
 """Your reranker (stage 1): ask Claude to reorder a first-stage system's top 20.
 
-This file is yours to write. Until you write it, build() raises NotImplementedError, and p2 skips
-the system and lists it as to do. NEEDS_CLAUDE = True tells p2 that searching calls claude -p, so
-CI never regenerates this system's runs; you produce them on your machine and commit them.
-
-Where the idea is:
-- the 13 lab's pipeline.py in the course repo (class/13-rag-pipeline/lab/starter/pipeline.py):
-  rerank_one() shows the top 20 as numbered passages, RERANK_SCHEMA forces the reply into
-  {"order": [20 numbers]}, a reply that is not each number once keeps the original order, and the
-  documents below the 20 keep their order underneath;
-- when you port RERANK_SCHEMA, also give its items "minimum": 1 and "maximum": 20 (the number of
-  passages), so Claude cannot answer with a number that names no passage: the lab's schema only
-  fixes how many numbers come back, and a reply such as [12, 2, 60, ...] silently keeps the first-stage order;
-- make every call through p2.claude.call(prompt, schema, model=cfg.model,
-  cache_dir=p2.claude.cache_folder(cfg)), which launches claude -p the way the lab does, caches
-  replies, and records the tokens in the run's trace (traces/, which you commit with the run file:
-  p2 check reads it, because CI never calls Claude to run this system again);
-- get the first stage with p2.retrievers.build("hybrid", corpus, cfg).
-
-`p2 answer --system rerank` also needs search_chunks(text, k): the same reranking over the first
-stage's top 20 chunks (hybrid's search_chunks gives them).
-
-A reranker over 20 candidates is one call per query: 20 calls for the practice queries, 40 for the
-test queries. Try two queries first, and look at what Claude sees, before the full run.
+NEEDS_CLAUDE = True tells p2 that searching calls claude -p, so CI never regenerates this system's
+runs; you produce them on your machine and commit them, together with their traces.
 """
 
+from __future__ import annotations
+
+from p2 import claude, retrievers
+
 NEEDS_CLAUDE = True
+CANDIDATES = 20
+PASSAGE_CHARS = 600
+
+PROMPT = """Below are {n} passages, numbered 1 to {n}, and a search query.
+Order the passages from the most useful for answering the query to the least useful.
+Reply with all {n} passage numbers, each exactly once, best first.
+
+Query: {query}
+
+{passages}"""
+
+
+def _schema(n: int) -> dict:
+    return {
+        "type": "object",
+        "properties": {
+            "order": {
+                "type": "array",
+                "items": {"type": "integer", "minimum": 1, "maximum": n},
+                "minItems": n,
+                "maxItems": n,
+            }
+        },
+        "required": ["order"],
+    }
+
+
+class Rerank:
+    def __init__(self, corpus, cfg):
+        self.corpus = corpus
+        self.first = retrievers.build("hybrid", corpus, cfg)
+        self.model = cfg.model
+        self.cache_dir = claude.cache_folder(cfg)
+        self.chunk_text = {c.id: c.text for c in corpus.chunks(cfg.chunk_words, cfg.chunk_overlap)}
+
+    def _reorder(self, query: str, candidates: list[str], texts: list[str]) -> list[str]:
+        n = len(candidates)
+        passages = "\n\n".join(f"[{i}] {t[:PASSAGE_CHARS]}" for i, t in enumerate(texts, 1))
+        prompt = PROMPT.format(n=n, query=query, passages=passages)
+        reply = claude.call(prompt, _schema(n), model=self.model, cache_dir=self.cache_dir)
+        order_nums = reply.output.get("order") if reply.output else None
+        if not isinstance(order_nums, list) or sorted(order_nums) != list(range(1, n + 1)):
+            return candidates  # a missing or invalid reply keeps the first stage's order
+        return [candidates[i - 1] for i in order_nums]
+
+    def _rank(self, text: str, k: int, hits: list[tuple[str, float]], text_of) -> list[tuple[str, float]]:
+        candidates = [item for item, _ in hits[:CANDIDATES]]
+        rest = [item for item, _ in hits[CANDIDATES:]]
+        new_order = self._reorder(text, candidates, [text_of(c) for c in candidates]) if candidates else candidates
+        combined = new_order + rest
+        total = len(combined)
+        return [(item, float(total - i)) for i, item in enumerate(combined)][:k]
+
+    def search(self, text: str, k: int) -> list[tuple[str, float]]:
+        hits = self.first.search(text, max(k, CANDIDATES))
+        return self._rank(text, k, hits, lambda d: self.corpus.docs[d].text)
+
+    def search_chunks(self, text: str, k: int) -> list[tuple[str, float]]:
+        hits = self.first.search_chunks(text, max(k, CANDIDATES))
+        return self._rank(text, k, hits, lambda c: self.chunk_text[c])
 
 
 def build(corpus, cfg):
-    raise NotImplementedError(
-        "rerank is not built yet: write p2/retrievers/rerank.py (the idea is rerank_one() in the 13 lab's pipeline.py)."
-    )
+    return Rerank(corpus, cfg)
