@@ -1,0 +1,149 @@
+# CECW-EG (pages 181-184)
+
+TABLE C-8 (Continued)
+PT=PT**1.5
+Q(I)=P(I)+SOILP+(BPRES-P(NBX)-SOILP)*(1.-1./PT)
+DXX=DXX+DX
+5 CONTINUE
+DEL=0.0
+IF(NBX.GT.NEL)GO TO 20
+DO 10 I=NBX,NEL
+MTYP=IE(I)
+QQ=(Q(I)+Q(I+1))/2.
+PPP=SOILP+(P(I)+P(I+1))/2.
+F=QQ/PPP
+CON=CC(MTYP)
+IF(QQ.LT.PM(MTYP))CON=CS(MTYP)
+IF(QQ.GT.PM(MTYP))GO TO 8
+DEL=DEL+DX*12.*CON*ALOG10(F)/(1.+EO(MTYP))
+GO TO 10
+8 AA=PM(MTYP)/PPP
+AB=QQ/PM(MTYP)
+DEL=DEL+(CS(MTYP)*ALOG10(AA)+CC(MTYP)*ALOG10(AB))*DX*12./
+1 (1.+EO(MTYP))
+10 CONTINUE
+GO TO 20
+14 C1=0.76
+C2=1.5
+C3=2.*E50
+GO TO 16
+15 C1=1.
+C2=3.
+C3=0.04
+16 DEL=((((BPRES)*AREAB)/(QBULT*C1))**C2)*C3*DB*12.
+DEL=DEL-((((P(NBX)+SOILP)*AREAB)/(QBULT*C1))**C2)*C3*DB*12.
+20 CONTINUE
+RETURN
+END
+C
+C
+SUBROUTINE SHAFL(T,Z)
+PARAMETER (NL=40,NM=100)
+COMMON AREA,DB,DX,DS,DEL,PI,P(NM),IE(NM),SOILP,NEL,NBX,KOPT
+COMMON/SHA/ALGTH,AK(NL),B(NL),C(NL),DELT(NM),DELS(NM),
+1 EP(NM),TOT(NM),ZEP(NM),IOPT,JOPT,LOPT,NC,JL,
+1 NCC,FS(11),ZEPP(11),NCURVE(11),ALPHAA(NL)
+DIMENSION T(11,11),Z(11,2)
+U=0.0001
+DELC=0.0
+IF(JOPT.EQ.0)GO TO 5
+EPILE=EP(1)
+5 IF(LOPT.GE.1)GO TO 16
+C-33
+TABLE C-8 (Continued)
+WRITE(6,10)TOT(NBX)
+10 FORMAT(19HPOINT BEARING(LBS)=,F13.2,//)
+WRITE(6,15)
+15 FORMAT(50H DEPTH LOAD TRANS TOTAL LOAD COM OF IN,
+1 20HCR TOTAL MVMT ITER,/,31H FT LBS ,
+2 31H LBS INCHES INCHES)
+16 DELT(NBX)=DEL
+DO 50 K=2,NBX
+I=NBX+1-K
+MTYP=IE(I)
+NTER=1
+AKK=K-2
+BSLMT=ALGTH-(AKK*DX)
+DEPTH=BSLMT-DX/2.
+IF(IOPT.LE.4.OR.IOPT.EQ.6)GO TO 17
+DO 18 JJ=2,NCC
+IF(ZEPP(JJ)-DEPTH)18,19,19
+18 CONTINUE
+19 JK=NCURVE(JJ)
+SKF=FS(JJ-1)+(FS(JJ)-FS(JJ-1))*(DEPTH-ZEPP(JJ-1))/(ZEPP(JJ)-ZE
+1 PP(JJ-1))
+17 IF(IOPT.LE.4.OR.IOPT.EQ.6)JK=1
+DO 20 M=2,11
+IF(Z(M,JL)-ABS(DEL))20,21,21
+20 CONTINUE
+PERCP=T(11,JK)
+GO TO 25
+21 PERCP=T(M-1,JK)+((T(M,JK)-T(M-1,JK))*(ABS(DEL)-Z(M-1,JL))/
+1 (Z(M,JL)-Z(M-1,JL)))
+25 IF(IOPT.EQ.5)SHR=SKF*PERCP
+IF(IOPT.EQ.5)GO TO 35
+26 F=BSLMT*PI/ALGTH
+PH=B(MTYP)
+TA=SIN(PH)/COS(PH)
+SHR=TA*AK(MTYP)*(SOILP+(P(I)+P(I+1))/2.)+C(MTYP)
+IF(IOPT.EQ.1)SHR=SHR*SIN(F)
+IF(IOPT.EQ.2)SHR=SHR*0.6
+IF(IOPT.EQ.3)SHR=SHR*.45
+IF(IOPT.EQ.4)SHR=SHR*.3
+IF(IOPT.EQ.6)SHR=SHR*ALPHAA(MTYP)
+35 TNSLD=SHR*PERCP
+IF(DEL.LT.0.0)TNSLD=-TNSLD
+ALDINC=TNSLD*PI*DS*DX-(P(I+1)-P(I))*AREA
+IF(JOPT.EQ.1.OR.NC.EQ.1)GO TO 42
+DO 40 M=2,NC
+IF(ZEP(M)-DEPTH)40,41,41
+40 CONTINUE
+41 EPILE=EP(M-1)+(EP(M)-EP(M-1))*(DEPTH-ZEP(M-1))/(ZEP(M)-
+C-34
+TABLE C-8 (Concluded)
+1 ZEP(M-1))
+42 TOT(I)=ALDINC+TOT(I+1)
+AVGLD=TOT(I+1)+ALDINC/2.
+IF(JOPT.EQ.1)GO TO 46
+AEPILE=AREA*EPILE
+DELC=AVGLD*DX*12./AEPILE
+DELT(I)=DELC+DELT(I+1)-(DELS(I)-DELS(I+1))
+DELAV=((((TOT(I)+TOT(I+1))/2.)+TOT(I+1))*DX*3./AEPILE)
+1 +DELT(I+1)
+ETA=DELAV-DEL
+IF(U-ABS(ETA))45,46,46
+45 DEL=DELAV
+NTER=NTER+1
+GO TO 17
+46 IF(LOPT.GE.1)GO TO 48
+WRITE(6,55)DEPTH,ALDINC,TOT(I),DELC,DELT(I),NTER
+48 DEL=DELT(I)
+50 CONTINUE
+55 FORMAT(5E13.5,I5)
+RETURN
+END
+C-35
+APPENDIX D
+NOTATION
+Symbol Description
+c Unit soil cohesion, ksf; distance from centroid to outer fiber, ft
+cst Distance from centroid of steel reinforcing rod to outer fiber, ft
+c’ Effective unit soil cohesion, kips per square foot (ksf)
+ca Adhesion of soil to base ≤ c, ksf
+dr Diameter of vane rod, inch
+dv Vane diameter, inch
+e Void ratio
+emax Reference void ratio of a soil at the minimum density
+emin Reference void ratio of a soil at the maximum density
+eB Eccentricity parallel with B, M B/Q, ft
+eW Eccentricity parallel with W, M W/Q, ft
+fn Negative skin friction, ksf
+fni Mobilized negative skin friction of pile element i, ksf
+fs Skin friction, ksf
+fsi Skin friction of pile element i, ksf
+f’c Concrete strength, psi
+f’ys Steel yield strength, psi
+f-s Full mobilized skin friction, ksf
+h Height of hammer fall, ft
+hv Vane height, inch
+D-1

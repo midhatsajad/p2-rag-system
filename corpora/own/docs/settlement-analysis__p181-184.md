@@ -1,0 +1,210 @@
+# CECW-EG (pages 181-184)
+
+Table F-8. Continued
+C NOPT Option for model, =0 for consolidation swell (MECH)
+C =1 for Leonards and Frost
+C =2 for Schmertmann
+C =3 for Collapsible soil
+C =4 for elastic soil settlement
+C NBPRES Option for foundation, =1 for rectangular slab and
+C =2 for long strip footing
+C NNP Total number of nodal points
+C NBX Number of nodal point at bottom of foundation
+C NMAT Total number of different soil layers, < 10
+C DX Increment of depth, ft
+C N Element number
+C IE(N,1) Number of soil layer M associated with element N
+C M Number of soil layer
+C G(M) Specific gravity of soil layer M
+C WC(M) Water content of soil layer M, Percent
+C EO(M) Initial void ratio of soil layer M
+C DGWT Depth to hydrostatic water table, ft; If IOPTION =2,
+C set DGWT=XA+UWA/0.03125 where UWA= suction (or
+C positive value of the negative pore water pressure) at
+C depth XA
+C IOPTION Equilibrium moisture profile , = 0 for saturation above
+C the water table; if NOPT=0, then =1 for hydrostatic
+C with shallow water table, method 2 or =2 for
+C hydrostatic without shallow water table
+C NOUT Amount of output data, =0 only heave computations and
+C =1 for heave and pore pressure at each depth
+C increment
+C Q Applied pressure on foundation, tsf
+C BLEN Length of foundation or 0.0 if NBPRES = 2, feet
+C BWID Width of foundation or long continuous footing, feet
+C MRECT Location of calculation, =0 for center and =1
+C for corner of rectangle or edge of long footing
+C SP(M) Swell pressure of soil layer M, tsf
+C CS(M) Swell index of soil layer M
+C CC(M) Compression index of soil layer M
+C PM(M) Maximum past pressure, tsf
+C PO(M) Dilatometer A pressure, tsf
+C P1(M) Dilatometer B pressure, tsf
+C QC(M) If NOPT=2, cone penetration resistance, tsf
+C If NOPT=4, elastic soil modulus, tsf
+C PRES(M) Applied pressure at 5 points from collapsible soil,tsf
+C STRA(M) Strain at 5 points from collapsible soil
+C XA Depth of active zone of heave, feet
+C XF Depth from ground surface to the depth that the active
+C zone begins, feet
+C TIME Time in years after Construction for Schmertmann model
+PARAMETER (NL=30,NQ=101)
+COMMON/SLA/P(NQ),IE(NQ,1),EO(NL),DX,NBX,NEL,PII,NOUT
+DIMENSION PP(NQ),G(NL),WC(NL),HED(20)
+F-20
+Table F-8. Continued
+OPEN(5,FILE=’VDIN.DAT’)
+OPEN(6,FILE=’VDOU.DAT’)
+READ(5,1) (HED(I),I=1,20)
+WRITE(6,1) (HED(I),I=1,20)
+1 FORMAT(20A4)
+GAW=0.03125
+PII=3.14159265
+NP=1
+READ(5,2) NPROB,NOPT,NBPRES,NNP,NBX,NMAT,DX
+2 FORMAT(6I5,F10.2)
+WRITE(6,3) NPROB,NNP,NBX,NMAT,DX
+3 FORMAT(/,1X,’NUMBER OF PROBLEMS=’,I5,5X,’NUMBER OF NODAL POINTS=’
+1,I5,/,1X,’NUMBER OF NODAL POINT AT BOTTOM OF FOUNDATION=’,I11,/,1X
+2,’NUMBER OF DIFFERENT SOIL LAYERS=’,I5,5X,’INCREMENT DEPTH=’,F10.2
+3,’ FT’,/)
+IF(NOPT.EQ.0)WRITE(6,4)
+4 FORMAT(10X,’CONSOLIDATION SWELL MODEL’,/)
+IF(NOPT.EQ.1)WRITE(6,5)
+5 FORMAT(10X,’LEONARDS AND FROST MODEL’,/)
+IF(NOPT.EQ.2)WRITE(6,6)
+6 FORMAT(10X,’SCHMERTMANN MODEL’,/)
+IF(NOPT.EQ.3)WRITE(6,7)
+7 FORMAT(10X,’COLLAPSIBLE SOIL’,/)
+IF(NOPT.EQ.4)WRITE(6,8)
+8 FORMAT(10X,’ELASTIC SOIL’,/)
+IF(NBPRES.EQ.1)WRITE(6,9)
+9 FORMAT(10X,’RECTANGULAR SLAB FOUNDATION’,/)
+IF(NBPRES.EQ.2)WRITE(6,10)
+10 FORMAT(10X,’LONG CONTINUOUS STRIP FOUNDATION’,/)
+DEPF=DX*FLOAT(NBX-1)
+WRITE(6,11)DEPF
+11 FORMAT(1X,’DEPTH OF FOUNDATION =’,12X,F10.2,’ FEET’)
+DEPPR = DX*FLOAT(NNP-1)
+WRITE(6,12)DEPPR
+12 FORMAT(1X,’TOTAL DEPTH OF THE SOIL PROFILE =’,F10.2,’ FEET’)
+NEL=NNP-1
+L=0
+WRITE(6,21)
+21 FORMAT(1X,’ELEMENT NUMBER OF SOIL’,/)
+22 READ(5,2)N,IE(N,1)
+25 L=L+1
+IF(N-L)35,35,30
+30 IE(L,1)=IE(L-1,1)
+WRITE(6,32)L,IE(L,1)
+32 FORMAT(I5,8X,I5)
+GOTO 25
+35 WRITE(6,32)L,IE(L,1)
+IF(NEL-L)40,40,22
+40 CONTINUE
+WRITE(6,390)
+F-21
+Table F-8. Continued
+390 FORMAT(/,1X,’MATERIAL SPECIFIC GRAVITY WATER CONTENT, % ’,
+1’VOID RATIO’,/)
+400 READ(5,401) M,G(M),WC(M),EO(M)
+401 FORMAT(I5,3F10.3)
+IF(NMAT-M)403,405,400
+403 WRITE(6,404) M
+404 FORMAT(/,5X,’ERROR IN MATERIAL’, I5)
+STOP
+405 DO 410 M=1,NMAT
+WRITE(6,407) M,G(M),WC(M),EO(M)
+407 FORMAT(I5,3F18.3)
+410 CONTINUE
+1000 READ(5,45) DGWT,IOPTION,NOUT
+45 FORMAT(F10.2,2I5)
+READ(5,46)Q,BLEN,BWID,MRECT
+46 FORMAT(3F10.2,I5)
+WRITE(6,50) DGWT
+50 FORMAT(1X,’DEPTH TO WATER TABLE =’,11X,F10.2,’ FEET’,/)
+IF(NOUT.EQ.1)WRITE(6,51)
+IF(NOUT.EQ.0)WRITE(6,52)
+51 FORMAT(1X,’DISPLACEMENTS AT EACH DEPTH OUTPUT’,/)
+52 FORMAT(1X,’TOTAL DISPLACEMENTS ONLY’,/)
+IF(IOPTION.EQ.0.OR.NOPT.EQ.1)WRITE(6,61)
+61 FORMAT(1X,’EQUILIBRIUM SATURATED PROFILE ABOVE WATER TABLE’,/)
+IF(IOPTION.EQ.1.AND.NOPT.EQ.0)WRITE(6,62)
+62 FORMAT(1X,’EQUILIBRIUM HYDROSTATIC PROFILE ABOVE WATER TABLE’,/)
+WRITE(6,90)Q,BLEN,BWID
+90 FORMAT(/,1X,’APPLIED PRESSURE ON FOUNDATION=’,F10.2,’ TSF’,/,1X,
+1’LENGTH =’,F10.2,’ FEET’,5X,’WIDTH =’,F10.2,’ FEET’,/)
+IF(MRECT.EQ.0)WRITE(6,91)
+91 FORMAT(9X,’CENTER OF FOUNDATION’,/)
+IF(MRECT.EQ.1)WRITE(6,92)
+92 FORMAT(9X,’CORNER OF SLAB OR EDGE OF LONG STRIP FOOTING’,/)
+C CALCULATION OF EFFECTIVE OVERBURDEN PRESSURE
+105 P(1)=0.0
+PP(1)=0.0
+DXX=DX
+DO 110 I=2,NNP
+MTYP=IE(I-1,1)
+WCC=WC(MTYP)/100.
+GAMM=G(MTYP)*GAW*(1.+WCC)/(1.+EO(MTYP))
+IF(DXX.GT.DGWT)GAMM=GAMM-GAW
+P(I)=P(I-1)+DX*GAMM
+PP(I)=P(I)
+DXX=DXX+DX
+110 CONTINUE
+IF(NOPT.NE.0.OR.IOPTION.EQ.0)GOTO 120
+MO=IFIX(DGWT/DX)
+IF(MO.GT.NNP)MO=NNP
+DO 117 I=1,MO
+F-22
+Table F-8. Continued
+BN=DGWT/DX-FLOAT(I-1)
+P(I)=P(I)+BN*DX*GAW
+117 CONTINUE
+120 CALL SLAB(Q,BLEN,BWID,MRECT,NBPRES,PP(NBX))
+C CALCULATION OF MOVEMENT FROM MODELS
+IF(NOPT.EQ.0) CALL MECH(NMAT)
+IF(NOPT.EQ.1) CALL LEON(Q,NMAT,DGWT,BWID,PP,NBPRES)
+IF(NOPT.EQ.2) CALL SCHMERT(Q,NMAT,DGWT,BWID,PP,NBPRES,2)
+IF(NOPT.EQ.3) CALL COLL(NMAT)
+IF(NOPT.EQ.4) CALL SCHMERT(Q,NMAT,DGWT,BWID,PP,NBPRES,4)
+NP=NP+1
+IF(NP.GT.NPROB) GOTO 200
+GOTO 1000
+200 CLOSE(5,STATUS=’KEEP’)
+CLOSE(6,STATUS=’KEEP’)
+STOP
+END
+C
+C
+SUBROUTINE MECH(NMAT)
+PARAMETER(NL=30,NQ=101)
+COMMON/SLA/P(NQ),IE(NQ,1),EO(NL),DX,NBX,NEL,PII,NOUT
+DIMENSION SP(NL),CS(NL),CC(NL),PM(NL)
+WRITE(6,5)
+5 FORMAT(/,1X,’MATERIAL SWELL PRESSURE, SWELL COMPRESSION
+1 MAXIMUM PAST’,/,1X,’ TSF INDEX
+2 INDEX PRESSURE,TSF’,/)
+DO 10 I = 1,NMAT
+READ(5,11) M,SP(M),CS(M),CC(M),PM(M)
+IF(PM(M).LT.SP(M)) WRITE(6,14) SP(M),PM(M)
+IF(PM(M).LT.SP(M)) PM(M)=SP(M)
+WRITE(6,24)M,SP(M),CS(M),CC(M),PM(M)
+10 CONTINUE
+11 FORMAT(I5,4F10.4)
+14 FORMAT(/,1X,’SWELL PRESSURE’,F10.2,’ WAS SET GREATER THAN MAXIM’,
+1’UM PAST PRESSURE’,F10.2,/,1X,’WHICH IS NOT POSSIBLE; SWELL PRESSU
+2RE SET EQUAL TO MAXIMUM PAST PRESSURE’,/)
+24 FORMAT(1X,I5,4F15.3)
+C
+READ(5,30)XA,XF
+30 FORMAT(2F10.2)
+WRITE(6,31) XA,XF
+31 FORMAT(/,8X,’ACTIVE ZONE DEPTH (FT) =’,F10.2,/,1X,’DEPTH ACTIVE ZO
+1NE BEGINS (FT) =’,F10.2,/)
+DELH1=0.0
+DXX=0.0
+CALL PSAD(N1,N2,XA,XF,DXX,DX,NBX)
+IF(N1.GE.N2) GOTO 50
+IF(NOUT.EQ.0) GOTO 50
+WRITE(6,32)
+F-23
