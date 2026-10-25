@@ -2,3 +2,40 @@
 # origin is hand when you wrote the query yourself and claude when a model drafted it; at least 10 must be hand.
 # class is a word you choose, for example identifier, paraphrase or mixed as in the shared sets; scores are reported per class.
 # Lines that start with # are comments, so delete these lines or keep them, as you like.
+c01	cross-cutting	What does RQD measure and how is it calculated from core samples?	claude
+c02	cross-cutting	How is RQD used differently when choosing a foundation type versus classifying tunnel excavation conditions?	claude
+c03	cross-cutting	How does consolidation settlement differ between a dam-related structure and a shallow foundation?	claude
+c04	cross-cutting	When does liquefaction become a concern for a structure's foundation?	claude
+c05	cross-cutting	What role does grouting play in tunnel ground support versus foundation treatment?	claude
+c06	cross-cutting	How is standard penetration test (SPT) data used differently in settlement analysis versus bearing capacity?	claude
+c23	cross-cutting	How does groundwater affect the design of a tunnel compared with a foundation on rock?	hand
+c24	cross-cutting	Why does the spacing and orientation of rock joints matter for both excavation stability and foundation bearing?	hand
+c25	cross-cutting	How is unconfined compressive strength of rock used when designing tunnel support versus estimating foundation capacity?	hand
+c26	cross-cutting	What do engineers look for when logging rock core during a site investigation?	hand
+c27	cross-cutting	How does weathered rock change the approach to both foundation design and tunneling?	hand
+c28	cross-cutting	Why do engineers measure in situ stress, and how does it influence design underground versus at the surface?	hand
+c29	cross-cutting	How are cone penetration test results used in different kinds of geotechnical analysis?	hand
+c30	cross-cutting	How do swelling clays or swelling rock cause problems for tunnels and for foundations?	hand
+c31	cross-cutting	What is the deformation modulus of a rock mass, and where does it come into design?	hand
+c07	identifier	What is the depth of shear failure beneath a foundation base, as given by Equation 1-4a?	claude
+c08	identifier	What does the Schmertmann strain influence factor diagram (Figure 3-4) show?	claude
+c09	identifier	What is the Vesic 1963 relationship between relative density, relative depth, and bearing capacity failure mode?	claude
+c10	identifier	What is the standard definition of Rock Quality Designation from Deere 1964?	claude
+c11	identifier	What is the calyx hole method used for in site investigation?	claude
+c12	identifier	What test does a general purpose consolidometer perform (Figure E-2)?	claude
+c13	identifier	What rock mass classification systems does EM 1110-1-2908 name besides RQD?	claude
+c14	paraphrase	Why does a shaft need different ground support as it passes from soil into rock?	claude
+c15	paraphrase	How do engineers decide whether a footing will fail by general shear or by punching?	claude
+c16	paraphrase	Why would a tunnel boring machine's performance be affected by rock strength and abrasiveness?	claude
+c17	paraphrase	What goes wrong with a foundation if it's built in frost-susceptible soil?	claude
+c18	paraphrase	What's the difference between a rock bolt and a rock dowel?	claude
+c19	paraphrase	What methods let engineers see inside a borehole without pulling a core sample?	claude
+c20	paraphrase	Why might spacing foundations too close together reduce how much weight each one can carry?	claude
+c21	paraphrase	How does an earthquake affect a building's foundation through the soil underneath it?	claude
+c22	paraphrase	What's the difference between probehole drilling ahead of a tunnel face and exploratory borings done before construction?	claude
+c32	identifier	How is the allowable bearing pressure of a footing on sand estimated from standard penetration test blow counts?	hand
+c33	identifier	What is the difference between immediate settlement and primary consolidation settlement?	hand
+c34	identifier	What does the Q-system rating combine to describe rock mass quality?	hand
+c35	paraphrase	Why might the ground around a newly dug tunnel keep moving for weeks afterward?	hand
+c36	paraphrase	How can you tell before construction whether the soil under a building will keep sinking for years?	hand
+c37	paraphrase	What can be done when water keeps flowing into an excavation?	hand
