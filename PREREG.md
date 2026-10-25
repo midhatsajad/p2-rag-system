@@ -102,7 +102,15 @@ Which row of the table in section 4 is it?
 Did your gold set reach the size section 3 asked for, and what was the minimum detectable difference that `uv run p2 score` printed?
 What would you do next, and what would you want a reader to take from this?
 
-TODO: your outcome.
+The interval for rerank minus hybrid on nDCG@10 was −0.095 [−0.227, +0.028]. It includes zero, with the upper end inside +0.15 and the lower end beyond −0.15, so by my rule the result is inconclusive. The point estimate went the opposite way from my hypothesis. The upper end of +0.028 puts a reranker gain as large as Δ outside the interval, but my rule required both ends inside ±0.15 to rule out a difference, and a hybrid advantage larger than 0.15 is not ruled out.
+
+I did not build the gold set section 3 committed to. I planned 40 queries, most of them cross-cutting, and wrote 37, of which 15 are cross-cutting. The hypothesis is about cross-cutting queries, but most of the set tests something else, which dilutes any effect specific to them. The sd I planned with, which section 3 left to confirm, was 0.307 in results/results.json, so the planned n of about 36 stands. The minimum detectable difference that p2 score printed was 0.187, above my Δ of 0.15, because the per-query differences on my corpus varied more than on the shared one: sd 0.406 against 0.307. At that spread, a test at Δ = 0.15 needs about 58 queries, or about 60 with the small-sample correction.
+
+Judging was also shallower than it should have been. The pool took each system’s top 5, so a relevant document that a system ranked 6 to 10, and that no system had in its top 5, was never judged and counted against that system. rerank is the system most exposed to this, because its ranks 6 to 10 can hold documents promoted from hybrid’s ranks 11 to 20. I did not measure how much this cost it.
+
+Outside the pre-registered test, the per-class scores point in a direction worth testing properly. On the 15 cross-cutting queries, rerank has a higher nDCG@10 than hybrid (0.695 against 0.680), while on the 10 identifier queries it is far lower (0.585 against 0.881). The identifier drop is not a pooling artifact: every relevant identifier document was judged, since bm25, dense and hybrid all reach recall@10 of 1.000 there, so rerank moved judged relevant documents down. All of this is descriptive, with no interval and too few queries per class, and I did not predict the identifier drop.
+
+Next, I would build a gold set of about 60 queries with cross-cutting queries as the majority, pool each system’s top 10, and pre-register the cross-cutting class on its own. Before rerunning, I would count each system’s unjudged top-10 documents to measure the pooling bias, and check two possible causes of the identifier drop: how often the reranker’s reply failed the permutation check and fell back to hybrid’s order, and whether it saw whole four-page documents or truncated ones. What I would want a reader to take from this is that the reranker’s large gain on the shared corpus did not carry over to this one, and that this gold set is too small, too mixed and too shallowly judged to say whether it helped, hurt, or did nothing on the queries the hypothesis was about.
 
 ---
 

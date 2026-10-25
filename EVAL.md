@@ -122,6 +122,7 @@ The per-class table has only 6 or 7 queries per class and no intervals, so I rea
 Cormack, Clarke and Buettcher’s claim, cited in lecture 13, that reciprocal rank fusion outperforms the individual systems it fuses is left open here. hybrid’s point estimates are below bm25’s on all three scores and below dense’s on MRR@10 and nDCG@10, though none of those differences is distinguishable.
 
 By class, hybrid lands between the two systems instead of taking the better of each. On paraphrase queries, its MRR@10 is 0.152, against dense’s 0.714. On identifier queries, its recall@10 is 0.500, against bm25’s 1.000. This also limits the reranker, which can only reorder what hybrid hands it: its identifier recall@10 of 0.643 stays well below bm25’s. My untested guess is that each system’s ranking is close to noise on the class where it fails, and RRF with k = 60 weights that noise equally with the other system’s good ranking. A weighted fusion or a smaller k would test this guess.
+
 ---
 
 ## 2. Stage 1 - cited answers on the 12 shared questions
@@ -161,7 +162,15 @@ What is it, where did it come from, how many documents and how many megabytes, a
 Name the one or two documents you were least sure about and what you decided.
 Say which of the allowed sources in the brief it comes from.
 
-TODO: describe your corpus and its license basis.
+The corpus is five US Army Corps of Engineers Engineer Manuals on underground and foundation engineering: EM 1110-2-2901, *Tunnels and Shafts in Rock* (1997); EM 1110-1-2908, *Rock Foundations* (1994); EM 1110-1-1804, *Geotechnical Investigations* (2001); EM 1110-1-1905, *Bearing Capacity of Soils* (1992); and EM 1110-1-1904, *Settlement Analysis* (1990).
+They were downloaded as PDFs from the USACE publications site and ingested with `p2 ingest --part-pages 4`, which splits each manual into parts of about four pages, giving 212 documents, about 316,000 words (about 442,000 estimated tokens) and 2.1 MB.
+All five are works of the Department of the Army, approved for public release, so the license basis is US government public domain (`us-gov-public-domain`), which is the brief's allowed source for US federal works.
+
+The manual I was least sure about was EM 1110-2-3506, *Grouting Technology*, and I dropped it.
+`p2 license` flagged 129 of its 134 parts, mostly figure captions credited to private consulting firms and equipment makers ("Courtesy of Gannett Fleming" and similar) and reprints used with permission, so too much of it was not the government's own work to clear part by part.
+I also checked EM 1110-1-1802, *Geophysical Exploration*, and rejected it before ingesting, because its methods chapters are illustrated with figures reproduced by permission of publishers and instrument makers.
+In the manuals I kept, every flag was reviewed and recorded in the manifest: 58 flags in *Tunnels and Shafts in Rock* trace to one bibliography citation that ingest dropped with the reference list, and 10 flags in *Bearing Capacity* and *Settlement Analysis* are captions for borrowed figures whose images are not in the text-only corpus.
+`p2 license` now reports 212 documents, 212 ok, 0 flagged.
 
 ### The gold set
 
@@ -170,7 +179,13 @@ How did you decide that a document is relevant: write your relevance rule in two
 How did you find candidates (the systems' top 10, a keyword search, reading), and did you read every document before you labeled it?
 Your labels are binary (`rel` 1) unless you say otherwise: if you use graded labels, declare the scale here, for example 2 means the document answers the query fully and 1 means it helps.
 
-TODO: describe your gold set and your relevance rule.
+The gold set has 37 queries: 15 with origin hand (c23–c37), written from my own tunnel-engineering questions, and 22 with origin claude (c01–c22), drafted by Claude and edited by me.
+I used three query classes. cross-cutting (15: c01–c06 and c23–c31) queries ask about a term that appears in several manuals for different purposes, such as RQD, grouting or groundwater. They are the class my pre-registered hypothesis tests. identifier (10: c07–c13 and c32–c34) and paraphrase (12: c14–c22 and c35–c37) mirror the shared corpus’s classes. Several identifier queries name an equation, figure or citation directly (for example “Equation 1-4a” and “Deere 1964”), which gives bm25 an exact string to match.
+
+Relevance rule: a document is relevant if, after reading its full text, I judged that it substantively answers the query in the setting the query asks about. A document that only shares the query’s vocabulary, or defines a term when the query asks how it is used, is not relevant. For a cross-cutting query, a passage in any manual counts if it answers for that manual’s purpose, so one query can have relevant documents in several manuals.
+
+Candidates came from the union of the top 5 of all four systems (bm25, dense, hybrid and rerank), so no single system, including the one my hypothesis is about, shaped the pool alone. Where the pool looked weak (c04, c23 and c35), a keyword search across the corpus found further candidates. One drafted query, about permission to reuse figures, had no answer anywhere in the corpus after that search, so I dropped and replaced it. I read every candidate’s full text before labeling it. Documents outside the pool were not judged and count as not relevant, so recall@10 is measured against the relevant documents the pool found. A system is penalized when it ranks a relevant document at 6 to 10 that no system, itself included, put in its top 5, because that document was never judged and counts as not relevant. c04 (liquefaction) has only one relevant document, so its scores rest on a single label.
+Labels are binary: rel 1 means relevant under the rule above.
 
 ---
 
@@ -273,7 +288,13 @@ Which differences are distinguishable and which are not, at your gold-set size?
 Do the `hand` queries and the `claude` queries tell the same story?
 Did your prediction in `DECISIONS.md` prompt 1 hold?
 
-TODO: write what your own-corpus intervals let you claim.
+On 37 queries, one pair is distinguishable: hybrid is higher than bm25 on recall@10 (+0.095, [+0.027, +0.176]) and nDCG@10 (+0.109, [+0.033, +0.181]). Its MRR@10 gain (+0.113, [−0.007, +0.231]) is not distinguishable, though the interval only just reaches zero. Both detected gains sit at about their minimum detectable difference (0.106 and 0.107), so their size is rough.
+
+Every other difference is not distinguishable. rerank separates from no system on any score. Its point estimates are below hybrid on all three scores and below dense on MRR@10 and nDCG@10, but none of those intervals excludes zero. The minimum detectable differences run from 0.106 to 0.270, so on MRR@10 a gap of about 0.25 between rerank and any other system could go unseen. Because the pool took only each system’s top 5, these scores also carry a bias against systems whose ranks 6 to 10 hold documents the pool never covered, and rerank, whose 6 to 10 slots can hold documents promoted from hybrid’s ranks 11 to 20, is the system most exposed to it. I did not measure this; counting each system’s unjudged top-10 documents would. Here rerank cost about 15,170 input tokens and 10.2 seconds per query, against under 10 milliseconds for the other three, for no distinguishable gain.
+
+The per-class table has 10 to 15 queries per class and no intervals, so I read it descriptively. rerank’s overall deficit comes almost entirely from identifier queries. There its MRR@10 is 0.484 against hybrid’s 0.850, and its nDCG@10 is 0.585 against 0.881. On cross-cutting queries, the class my pre-registered hypothesis is about, rerank has the highest MRR@10 (0.744) and nDCG@10 (0.695, against hybrid’s 0.680). One reading is that the reranker demotes exact-identifier matches that the first stage had already placed at the top, while helping slightly where the query needs a passage’s purpose read. Pooling does not explain the identifier drop: bm25, dense and hybrid all reach recall@10 of 1.000 on identifier queries, so every relevant identifier document was judged, and rerank’s 0.900 there comes from moving judged relevant documents below rank 10. Because rerank only reorders hybrid’s top 20, it cannot find a document hybrid missed. When hybrid already ranks the right document first, reordering can only keep it there or move it down. The cross-cutting gap is far too small to claim with 15 queries.
+
+The hand and claude queries mostly tell the same story. The only distinguishable origin difference is bm25’s recall@10, which is higher on claude queries (hand minus claude −0.198, [−0.399, −0.018]). The table that asks directly whether drafted queries favor keyword search finds no distinguishable difference in bm25’s lead over dense between the two origins on any score. Drafted queries echoing the documents’ wording would not explain the recall gap either, since hand queries share more content words with their best relevant document (0.74) than claude queries do (0.69). A likelier explanation is the class mix: 7 of the 10 identifier queries are claude queries, while 9 of the 15 hand queries are cross-cutting, so the origin comparison is partly a class comparison. I did not test this.
 
 ---
 
