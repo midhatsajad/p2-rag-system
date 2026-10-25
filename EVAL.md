@@ -483,8 +483,14 @@ Every trace in traces/ that records a Claude call:
 | Trace | System | Spans | Claude calls | Saved | Input tokens | Output tokens | Seconds | Input per span | Output per span | Seconds per span |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | traces/answers-rerank.jsonl | rerank | 12 | 24 | 0 | 229,273 | 9,624 | 134.7 | 19,106 | 802 | 11.2 |
+| traces/answers-rerank.r1.jsonl | rerank | 12 | 24 | 0 | 206,522 | 9,619 | 138.4 | 17,210 | 802 | 11.5 |
+| traces/answers-rerank.r2.jsonl | rerank | 12 | 24 | 0 | 204,858 | 10,393 | 146.0 | 17,072 | 866 | 12.2 |
+| traces/answers-rerank.r3.jsonl | rerank | 12 | 24 | 0 | 213,245 | 9,504 | 140.1 | 17,770 | 792 | 11.7 |
 | traces/own-own-rerank.jsonl | rerank | 37 | 37 | 36 | 561,273 | 29,280 | 376.7 | 15,170 | 791 | 10.2 |
 | traces/shared-practice-rerank.jsonl | rerank | 20 | 20 | 20 | 286,944 | 9,111 | 142.0 | 14,347 | 456 | 7.1 |
+| traces/shared-practice-rerank.r1.jsonl | rerank | 20 | 20 | 0 | 298,359 | 6,787 | 111.4 | 14,918 | 339 | 5.6 |
+| traces/shared-practice-rerank.r2.jsonl | rerank | 20 | 20 | 0 | 287,799 | 7,286 | 113.6 | 14,390 | 364 | 5.7 |
+| traces/shared-practice-rerank.r3.jsonl | rerank | 20 | 20 | 0 | 298,191 | 6,530 | 103.4 | 14,910 | 326 | 5.2 |
 | traces/shared-test-rerank.jsonl | rerank | 40 | 40 | 40 | 648,150 | 19,162 | 300.1 | 16,204 | 479 | 7.5 |
 
 A span is one query of a run, one question of an answers file, or one claim of a judged file. A saved reply costs nothing now, so it counts the tokens and the seconds of the call that made it.
@@ -530,6 +536,12 @@ _No stretch runs yet (stretch option 5): `uv run p2 run --corpus own --queries e
 
 Write the five things here.
 
+1. Option: rider (598E).
+2. What I did and the files: I pre-registered a claim about my own corpus in PREREG.md, committed at e07a373 before the first judgment in eval/own/qrels.txt, then built and judged the gold set (eval/own/queries.tsv, eval/own/qrels.txt) and scored it. I ran the reranker three times on the shared practice queries (runs/shared/rerank.practice.r1.trec to .r3.trec) and generated three answers files (answers/shared/rerank.r1.json to .r3.json), with three records in r3 regenerated after a session-limit error.
+3. Tables: repeats in section 9 for the repeated runs, and the rerank minus hybrid nDCG@10 row of own-pairs in section 4 for the pre-registered test.
+4. What the intervals let me claim: on the 20 shared practice queries, the reranker’s gain over hybrid reproduces across three runs, with a spread of at most 0.006 against gains of 0.14 to 0.33. The answers were identical in all three files, but the Wilson intervals on 8 and 4 questions stay wide. The pre-registered own-corpus test is inconclusive, not a well-powered null: its interval [−0.227, +0.028] rules out a reranker gain as large as 0.15, but not a hybrid advantage that large.
+5. Next: build a gold set of about 60 queries with cross-cutting queries as the majority, pool each system’s top 10, and rerun rerank with passages long enough to hold each document’s content. If the rerank minus hybrid interval on nDCG@10 then lies entirely above zero, the hypothesis is supported; if both ends fall inside ±0.15, a difference that large is ruled out.
+
 ---
 
 ## 9. 598E only - repeats and the pre-registered claim
@@ -542,13 +554,47 @@ Write the five things here.
 Three runs of the reranker on the practice queries, and three answers files, with their run-to-run spread and Wilson intervals.
 
 <!-- p2:begin repeats -->
-_No repeated runs or answers files yet (598E: `p2 run ... --repeat 3` and `p2 answer ... --repeat 3`)._
+Repeated runs of rerank on shared/practice:
+
+| Run | Recall@10 | MRR@10 | nDCG@10 |
+| --- | ---: | ---: | ---: |
+| rerank.r1 | 0.733 | 0.800 | 0.746 |
+| rerank.r2 | 0.733 | 0.800 | 0.739 |
+| rerank.r3 | 0.733 | 0.800 | 0.742 |
+| range (max minus min) | 0.000 | 0.000 | 0.006 |
+
+| Comparison | Metric | Mean difference | 95% interval | Reading |
+| --- | --- | ---: | ---: | --- |
+| rerank.r1 minus hybrid | Recall@10 | +0.142 | [+0.050, +0.258] | rerank.r1 higher |
+| rerank.r2 minus hybrid | Recall@10 | +0.142 | [+0.050, +0.258] | rerank.r2 higher |
+| rerank.r3 minus hybrid | Recall@10 | +0.142 | [+0.050, +0.258] | rerank.r3 higher |
+| rerank.r1 minus hybrid | MRR@10 | +0.329 | [+0.164, +0.504] | rerank.r1 higher |
+| rerank.r2 minus hybrid | MRR@10 | +0.329 | [+0.164, +0.504] | rerank.r2 higher |
+| rerank.r3 minus hybrid | MRR@10 | +0.329 | [+0.164, +0.504] | rerank.r3 higher |
+| rerank.r1 minus hybrid | nDCG@10 | +0.302 | [+0.173, +0.436] | rerank.r1 higher |
+| rerank.r2 minus hybrid | nDCG@10 | +0.296 | [+0.167, +0.430] | rerank.r2 higher |
+| rerank.r3 minus hybrid | nDCG@10 | +0.298 | [+0.170, +0.430] | rerank.r3 higher |
+
+Repeated answers shared/rerank:
+
+| File | Verified (in) | 95% interval | Declined (out) | 95% interval |
+| --- | ---: | ---: | ---: | ---: |
+| rerank.r1 | 8 of 8 (100%) | [0.676, 1.000] | 4 of 4 (100%) | [0.510, 1.000] |
+| rerank.r2 | 8 of 8 (100%) | [0.676, 1.000] | 4 of 4 (100%) | [0.510, 1.000] |
+| rerank.r3 | 8 of 8 (100%) | [0.676, 1.000] | 4 of 4 (100%) | [0.510, 1.000] |
+| range (max minus min) | 0.000 |  | 0.000 |  |
+
+Each repeat answers the same questions, so the repeats are not independent trials and their counts are not pooled into one interval.
 <!-- p2:end repeats -->
 
 Does the reranker's gain over its first stage survive the run-to-run variation?
 Write what the spread is, how it compares with the gain, and what the Wilson intervals on the verified share and the declined share say about 8 and 4 questions.
 
-598E: write the repeats result here.
+The reranker’s gain over its first stage, hybrid, survives the run-to-run variation on the practice queries. I ran rerank three times with fresh Claude calls and no saved replies (runs/shared/rerank.practice.r1.trec to .r3.trec). Recall@10 (0.733) and MRR@10 (0.800) were identical in all three runs. The only score that varied, nDCG@10, moved by 0.006, about 2 percent of its gain over hybrid (+0.296 to +0.302 across the repeats). In every repeat, the interval against hybrid clears zero on all three scores, as in the original run. This shows the gain does not depend on one lucky run of the model. It does not widen the evidence beyond these 20 queries: every repeat answers the same queries, so the intervals still come from 20 queries.
+
+The three answers files (answers/shared/rerank.r1.json to .r3.json) were identical: 8 of 8 in-corpus questions verified and 4 of 4 out-of-corpus questions declined, every time. In the third run, the calls for a10, a11 and a12 failed with a session-limit error, and the failed records scored as answered rather than declined. I regenerated those three questions in a separate fresh run and merged the three corrected records into rerank.r3.json by question id, so that file combines two runs.
+
+Repeating does not tighten the Wilson intervals, because the three runs answer the same questions and cannot be pooled as new evidence. The intervals stay [0.676, 1.000] for the verified share and [0.510, 1.000] for the declined share. With 8 and 4 questions, a perfect score rules out a system that fails most of the time, but not one that answers wrongly one time in three or declines only half the time it should. The repeats show that the answering behavior is stable across runs, not that the true rates are 100 percent.
 
 ### The pre-registered claim
 
@@ -556,4 +602,4 @@ The claim, the smallest effect, the gold-set size and the test are in `PREREG.md
 Here, say whether you followed the plan, what the interval turned out to be, and what that means.
 The outcome section of `PREREG.md` holds the short version.
 
-598E: write the claim and its outcome here.
+My pre-registered claim (PREREG.md, commit e07a373, before any judgment) was that rerank would have a higher nDCG@10 than hybrid on my corpus, with Δ = 0.15 and a planned 40 queries, most of them cross-cutting. I did not fully follow the plan: I wrote 37 queries, 15 of them cross-cutting. The interval for rerank minus hybrid on nDCG@10 was −0.095 [−0.227, +0.028]. It includes zero and its lower end is beyond −0.15, so by my rule the result is inconclusive, with the point estimate opposite to my prediction. The minimum detectable difference was 0.187, above Δ, because the per-query sd was 0.406 rather than the 0.307 I planned with. After scoring, I also found that rerank.py sends Claude only the first 600 characters of each document, about 7 percent of one of my four-page parts, so the test did not compare hybrid with a reranker that could read the passages my hypothesis was about. The full outcome is in PREREG.md section 5.
