@@ -148,7 +148,7 @@ I read a01, a02 and a03 against their cited chunks.
 
 a01 ("within how many minutes must a mine operator call MSHA after an accident that kills a miner?") is fully supported. It has two claims on the same chunk (`cfr30-50.10#0`): one quotes "within 15 minutes... once the operator knows or should know that an accident has occurred involving:", the other quotes "(a) A death of an individual at the mine;". Read alone, neither claim answers the question: the first gives the time limit but not the triggering accident, the second names the accident but not the time limit. Together, they do. `p2 verify` checks each claim's quote against its chunk, not whether the set of claims together answers the question, so this is the kind of gap that check cannot see on its own.
 
-a02 ("what minimum incombustible content must the combined dust keep where no methane is present?") has a real problem. The claim says the 80 percent incombustible content "must be maintained throughout the top, floor, and sides of all underground areas." The cited chunk (`cfr30-75.403#0`) opens with a condition the claim drops: "Where rock dust is required to be applied, it shall be distributed... and maintained in such quantities that the incombustible content... shall be not less than 80 percent." The claim states the 80 percent rule as if it always applies, when the regulation states it only where rock dust is required to be applied. I checked that this is not a chunk boundary problem: chunk `#0` starts at the section heading, and the conditional opening is the actual first sentence of 30 CFR 75.403. So the quote is a real piece of the chunk, but the claim is broader than the law it cites.
+a02 ("what minimum incombustible content must the combined dust keep where no methane is present?") has a real problem. The claim says the incombustible content “must be not less than 80 percent, maintained throughout the top, floor, and sides of all underground areas." The cited chunk (`cfr30-75.403#0`) opens with a condition the claim drops: "Where rock dust is required to be applied, it shall be distributed... and maintained in such quantities that the incombustible content... shall be not less than 80 percent." The claim states the 80 percent rule as if it always applies, when the regulation states it only where rock dust is required to be applied. I checked that this is not a chunk boundary problem: chunk `#0` starts at the section heading, and the conditional opening is the actual first sentence of 30 CFR 75.403. So the quote is a real piece of the chunk, but the claim is broader than the law it cites.
 
 a03 ("how long must the self-rescue device given to each underground coal miner be able to protect that person?") is fully supported. The quote states the 1-hour requirement directly, and the claim answers the question. It narrows the regulation in two small ways that do not change that answer: it drops "and to visitors authorized to enter the mine by the operator," which the question does not ask about, and it changes "device or devices" to "a device," which understates that more than one device may add up to the hour.
 
@@ -200,6 +200,7 @@ Scores per system on your gold set.
 | dense | 0.856 | 0.710 | 0.707 |
 | hybrid | 0.923 | 0.715 | 0.731 |
 | rerank | 0.878 | 0.623 | 0.636 |
+| ablation/dense_potion | 0.842 | 0.595 | 0.630 |
 
 37 judged queries; nDCG uses binary labels; a random ranking of the 212 documents would get recall@10 near 0.047.
 <!-- p2:end own -->
@@ -221,6 +222,9 @@ The same scores per query class.
 | rerank | Recall@10 | 0.867 | 0.900 | 0.875 |
 | rerank | MRR@10 | 0.744 | 0.484 | 0.588 |
 | rerank | nDCG@10 | 0.695 | 0.585 | 0.605 |
+| ablation/dense_potion | Recall@10 | 0.778 | 1.000 | 0.792 |
+| ablation/dense_potion | MRR@10 | 0.513 | 0.753 | 0.565 |
+| ablation/dense_potion | nDCG@10 | 0.544 | 0.815 | 0.585 |
 <!-- p2:end own-classes -->
 
 The same scores for the queries you wrote yourself (`hand`) and the ones a model drafted (`claude`), with the difference between the two groups and its interval.
@@ -241,6 +245,9 @@ Once both groups have queries, the table also says whether `bm25`'s lead over `d
 | rerank | Recall@10 | 0.833 | 0.909 | -0.076 | [-0.288, +0.092] | not distinguishable |
 | rerank | MRR@10 | 0.678 | 0.586 | +0.091 | [-0.153, +0.329] | not distinguishable |
 | rerank | nDCG@10 | 0.648 | 0.628 | +0.019 | [-0.176, +0.205] | not distinguishable |
+| ablation/dense_potion | Recall@10 | 0.744 | 0.909 | -0.165 | [-0.376, +0.015] | not distinguishable |
+| ablation/dense_potion | MRR@10 | 0.519 | 0.647 | -0.128 | [-0.362, +0.103] | not distinguishable |
+| ablation/dense_potion | nDCG@10 | 0.561 | 0.677 | -0.116 | [-0.326, +0.087] | not distinguishable |
 
 The hand and claude queries are different queries, so the interval of hand minus claude comes from resampling the queries within each group (10,000 times), not from pairing them.
 
@@ -280,6 +287,18 @@ Differences between every pair of systems.
 | rerank minus hybrid | Recall@10 | -0.045 | [-0.149, +0.050] | 0.144 | not distinguishable |
 | rerank minus hybrid | MRR@10 | -0.091 | [-0.269, +0.083] | 0.258 | not distinguishable |
 | rerank minus hybrid | nDCG@10 | -0.095 | [-0.227, +0.028] | 0.187 | not distinguishable |
+| ablation/dense_potion minus bm25 | Recall@10 | +0.014 | [-0.041, +0.068] | 0.086 | not distinguishable |
+| ablation/dense_potion minus bm25 | MRR@10 | -0.007 | [-0.166, +0.149] | 0.227 | not distinguishable |
+| ablation/dense_potion minus bm25 | nDCG@10 | +0.008 | [-0.101, +0.114] | 0.156 | not distinguishable |
+| ablation/dense_potion minus dense | Recall@10 | -0.014 | [-0.122, +0.108] | 0.158 | not distinguishable |
+| ablation/dense_potion minus dense | MRR@10 | -0.115 | [-0.223, -0.004] | 0.157 | dense higher |
+| ablation/dense_potion minus dense | nDCG@10 | -0.077 | [-0.161, +0.016] | 0.128 | not distinguishable |
+| ablation/dense_potion minus hybrid | Recall@10 | -0.081 | [-0.149, -0.027] | 0.086 | hybrid higher |
+| ablation/dense_potion minus hybrid | MRR@10 | -0.120 | [-0.237, +0.003] | 0.175 | not distinguishable |
+| ablation/dense_potion minus hybrid | nDCG@10 | -0.101 | [-0.180, -0.018] | 0.117 | hybrid higher |
+| ablation/dense_potion minus rerank | Recall@10 | -0.036 | [-0.162, +0.095] | 0.181 | not distinguishable |
+| ablation/dense_potion minus rerank | MRR@10 | -0.029 | [-0.179, +0.134] | 0.229 | not distinguishable |
+| ablation/dense_potion minus rerank | nDCG@10 | -0.006 | [-0.131, +0.129] | 0.190 | not distinguishable |
 
 The interval is a paired bootstrap (10,000 resamples of the queries); MDD is the smallest difference this many queries detect 80% of the time.
 <!-- p2:end own-pairs -->
@@ -304,22 +323,79 @@ Change one thing and keep everything else the same.
 Write your hypothesis here before you run it, in one sentence with a direction: "I expect X to raise MRR@10 on my corpus because Y."
 The run file for it lives in `runs/own/ablation/`.
 
+I swap dense's embedding model from bge-small-en-v1.5 to potion-retrieval-32M (`dense_potion`, varies `dense`). This tests the claim I made for choosing bge in section 1: that its contextual encoding, not just the paraphrase class, is what dense's score depends on. I chose it over a tokenizer or reranker-candidate-count ablation because it is free (dense makes no Claude calls), and because a variant and its base usually agree on most queries, giving a smaller spread of per-query differences than a comparison between two different systems, so a real effect has a better chance of being detectable at this gold-set size.
+
+I expect dense_potion to score lower than dense on nDCG@10, mostly on paraphrase and cross-cutting queries, because potion gives every word one fixed vector regardless of its sentence, so it cannot match everyday wording to the manuals' technical terms or tell RQD used for foundation design from RQD used for tunnel excavation.
+
 <!-- p2:begin own-ablation -->
-_No ablation runs yet: `uv run p2 run --corpus own --system NAME --ablation` writes one to runs/own/ablation/, then `uv run p2 score` fills this table._
+| Comparison | Metric | Mean difference | 95% interval | MDD | Reading |
+| --- | --- | ---: | ---: | ---: | --- |
+| ablation/dense_potion minus bm25 | Recall@10 | +0.014 | [-0.041, +0.068] | 0.086 | not distinguishable |
+| ablation/dense_potion minus bm25 | MRR@10 | -0.007 | [-0.166, +0.149] | 0.227 | not distinguishable |
+| ablation/dense_potion minus bm25 | nDCG@10 | +0.008 | [-0.101, +0.114] | 0.156 | not distinguishable |
+| ablation/dense_potion minus dense | Recall@10 | -0.014 | [-0.122, +0.108] | 0.158 | not distinguishable |
+| ablation/dense_potion minus dense | MRR@10 | -0.115 | [-0.223, -0.004] | 0.157 | dense higher |
+| ablation/dense_potion minus dense | nDCG@10 | -0.077 | [-0.161, +0.016] | 0.128 | not distinguishable |
+| ablation/dense_potion minus hybrid | Recall@10 | -0.081 | [-0.149, -0.027] | 0.086 | hybrid higher |
+| ablation/dense_potion minus hybrid | MRR@10 | -0.120 | [-0.237, +0.003] | 0.175 | not distinguishable |
+| ablation/dense_potion minus hybrid | nDCG@10 | -0.101 | [-0.180, -0.018] | 0.117 | hybrid higher |
+| ablation/dense_potion minus rerank | Recall@10 | -0.036 | [-0.162, +0.095] | 0.181 | not distinguishable |
+| ablation/dense_potion minus rerank | MRR@10 | -0.029 | [-0.179, +0.134] | 0.229 | not distinguishable |
+| ablation/dense_potion minus rerank | nDCG@10 | -0.006 | [-0.131, +0.129] | 0.190 | not distinguishable |
+
+The interval is a paired bootstrap (10,000 resamples of the queries); MDD is the smallest difference this many queries detect 80% of the time.
 <!-- p2:end own-ablation -->
 
 The queries your ablation helped and hurt, against the system it varies, by reciprocal rank.
 `p2 score` finds that system from a line such as `BASE = "bm25"` in your variant's file, or else from its name: `bm25_lab` varies `bm25`.
 
 <!-- p2:begin own-ablation-queries -->
-_No ablation runs yet: `uv run p2 run --corpus own --system NAME --ablation` writes one to runs/own/ablation/, then `uv run p2 score` fills this table._
+ablation/dense_potion against dense (BASE = "dense" in p2/retrievers/dense_potion.py): it helped 7 queries, hurt 14 and left 16 unchanged.
+
+| Query | Class | Origin | dense RR | ablation/dense_potion RR | Change | Effect |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| c26 | cross-cutting | hand | 0.000 | 1.000 | +1.000 | helped |
+| c03 | cross-cutting | claude | 0.000 | 0.250 | +0.250 | helped |
+| c18 | paraphrase | claude | 0.250 | 0.500 | +0.250 | helped |
+| c25 | cross-cutting | hand | 0.167 | 0.333 | +0.167 | helped |
+| c32 | identifier | hand | 0.200 | 0.333 | +0.133 | helped |
+| c20 | paraphrase | claude | 0.100 | 0.167 | +0.067 | helped |
+| c24 | cross-cutting | hand | 0.200 | 0.250 | +0.050 | helped |
+| c23 | cross-cutting | hand | 1.000 | 0.167 | -0.833 | hurt |
+| c04 | cross-cutting | claude | 1.000 | 0.250 | -0.750 | hurt |
+| c05 | cross-cutting | claude | 1.000 | 0.250 | -0.750 | hurt |
+| c02 | cross-cutting | claude | 1.000 | 0.500 | -0.500 | hurt |
+| c13 | identifier | claude | 1.000 | 0.500 | -0.500 | hurt |
+| c19 | paraphrase | claude | 1.000 | 0.500 | -0.500 | hurt |
+| c22 | paraphrase | claude | 1.000 | 0.500 | -0.500 | hurt |
+| c30 | cross-cutting | hand | 1.000 | 0.500 | -0.500 | hurt |
+| c36 | paraphrase | hand | 1.000 | 0.500 | -0.500 | hurt |
+| c29 | cross-cutting | hand | 0.333 | 0.000 | -0.333 | hurt |
+| c16 | paraphrase | claude | 0.333 | 0.111 | -0.222 | hurt |
+| c35 | paraphrase | hand | 0.200 | 0.000 | -0.200 | hurt |
+| c12 | identifier | claude | 0.250 | 0.200 | -0.050 | hurt |
+| c27 | cross-cutting | hand | 0.250 | 0.200 | -0.050 | hurt |
+
+RR is the reciprocal rank of the first relevant document in the top 10 (0 when none is there), the per-query value behind MRR@10; the queries at the top of each list are the ones to read.
 <!-- p2:end own-ablation-queries -->
 
 What did you change, what happened, and does the interval support the claim you want to make?
 If the result is not distinguishable, say what size of effect your gold set could have seen.
 Read the queries at the top of each list in the second table, and say whether your change explains them.
 
-TODO: write the ablation: the one change, the hypothesis, the result and the claim.
+On the metric I chose in advance, the result is not distinguishable. dense_potion minus dense on nDCG@10 is −0.077, with interval [−0.161, +0.016]. The point estimate goes the way I predicted, but the interval includes zero, so this gold set cannot tell the two models apart on nDCG@10. With an MDD of 0.128, it could reliably have seen a drop of about 0.13 or more, so a smaller real drop would be invisible here.
+
+On MRR@10 the drop is distinguishable: −0.115, with interval [−0.223, −0.004]. I did not choose MRR@10 in advance, so I report it as a secondary result rather than as support for the hypothesis. The interval also only just clears zero, and the point estimate is below the MDD of 0.157, so its size is rough.
+
+The variant's spread was smaller than for pairs of different systems, as I expected. The nDCG@10 MDD of 0.128 compares with 0.191 for dense minus bm25, so the paired design bought some power.
+
+The per-class scores, read descriptively, point the way the hypothesis predicts. dense_potion loses most on paraphrase queries (nDCG@10 0.682 to 0.585) and cross-cutting queries (0.636 to 0.544), and least on identifier queries (0.845 to 0.815), where exact terms do the work for either model.
+
+By reciprocal rank, the swap hurt 14 queries, helped 7 and left 16 unchanged. The hurt list leads with cross-cutting queries. In c23, c04 and c05, dense ranked a relevant document first and dense_potion ranked it fourth to sixth. c02, which asks how RQD is used differently for foundations and for tunnel excavation, the exact case my hypothesis names, fell from rank 1 to rank 2. Overall, 7 of the 14 hurt queries are cross-cutting and 5 are paraphrase. c04 rests on a single relevant document, so its swing is one label. Reading the three by hand splits the hurt list: in c23, four of dense_potion's five wrong top candidates do mention groundwater, dewatering, or hydraulic controls, the same term used for a different purpose, which is what the hypothesis predicts. In c04 and c05, none of the wrong top candidates mention liquefaction or grouting at all; the drop there is topical drift toward other short, similarly worded sections of the same manuals, with no shared vocabulary, not the mechanism I named. So of the three, only c23 actually tests the hypothesis.
+
+The helped list is not what the hypothesis predicts. The biggest gain is c26, a cross-cutting query where dense found nothing relevant in its top 10 and dense_potion ranked a relevant document first. That document is titled "Core Logging" and is dense with the query's own words, logging, core, description, investigation. A static model, closer to keyword averaging than a contextual one, may reward that direct lexical overlap, while dense's contextual reading pulled it toward structurally similar chapter-opening passages (scope and purpose statements from the same two manuals) that never use those words together. If so, this is a case where context-sensitivity cost dense a query, the opposite of what I predicted.
+
+So the claim the intervals support is narrow. Swapping to a static model lowered the rank of the first relevant document (MRR@10, a secondary metric), and the pre-chosen nDCG@10 drop is not distinguishable. The class pattern and the hurt list are consistent with the reason I gave for choosing bge, but they do not test it, and reading the actual queries shows the mechanism holding for one of three hurt cross-cutting queries and failing for the clearest helped one. dense_potion was also about eight times faster per query (0.8 ms against 6.6 ms), a saving this gold set cannot weigh against a drop smaller than 0.13.
 
 ---
 
@@ -331,8 +407,14 @@ Then sort the failures by cause, for example a vocabulary mismatch, near-duplica
 
 | qid | what the best system returned | what was relevant | cause | what you would try |
 |---|---|---|---|---|
+| c27 | ranks 1-5: a swell-potential table, an exploration-strategy passage, a discontinuity-definitions passage, and two manual intros | tunnels-shafts-rock__p113-116 (rank 6), rock-foundations__p109-112 (rank 8) | vocabulary mismatch: generic rock-description and exploration-strategy chunks share surface words (rock, discontinuity) without the specific weathered-rock-and-design content | weight passages whose section heading shares more query terms, or chunk by section so a "design considerations" subsection isn't diluted by its neighbors |
+| c03 | rank 1: a general passage defining consolidation settlement | settlement-analysis__p077-080 (rank 5), the actual dam-vs-footing comparison | a general-definition chunk states the query's key term directly, outranking the specific comparison passage, which uses different concrete vocabulary (FD31, CSANDSET, embankment) | for comparison queries, weight passages that name both compared items, or add a synonym map (embankment ~ dam) |
+| c26 | ranks 1-3: a pointer to another manual and two geotechnical-investigations chapter openers | geotechnical-investigations__p065-068, the Core Logging section (rank 4) | chapter-opening and scope-statement boilerplate shares manual-level vocabulary without the chapter's specific content; the same mechanism explained dense_potion's win on this query in the ablation | down-weight or separately classify recurring "purpose and scope" boilerplate, which adds little retrieval signal |
+| c18 | ranks 1-3: unrelated TBM and swelling passages, before rock-foundations__p069-072 at rank 4; tunnels-shafts-rock__p217-220, which also fully defines both rock bolt and rock dowel, sits at rank 6 | rock-foundations__p069-072 (the only document judged relevant) | a wrong label, not a retrieval failure: the gold set never added p217-220, a second genuinely relevant document, when this query was built | add p217-220 to c18's qrels |
+| c35 | ranks 1-3: unrelated pipe-infiltration and joint-orientation passages, before tunnels-shafts-rock__p117-120 at rank 4; the other relevant document never appears in the top 10 | tunnels-shafts-rock__p157-160 (missing), p117-120 (rank 4) | vocabulary mismatch: p157-160's register ("convergence-confinement," "ground relaxation") shares almost no words with the plain-language query | write a hand paraphrase using the convergence-confinement vocabulary and check whether recall improves, which would confirm the mismatch rather than a real absence |
+| c01 | rank 1: the Core Logging section, which only mentions RQD in passing; rank 2: rock-foundations__p021-024, the Deere 1964 RQD definition | tunnels-shafts-rock__p037-040 (rank 4), geotechnical-investigations__p069-072 (rank 3) | the same wrong-label problem as c18: p021-024 answers this query as directly as the judged documents, but was never added, because the RQD definition appears in two manuals and only one was labeled | add p021-024 to c01's qrels; audit the other "define X" queries for the same gap |
 
-TODO: add one row for each failure you analyzed, and write two or three sentences on the pattern you see across them.
+Four of the six failures (c27, c03, c26, c35) share one mechanism: a passage with generic, chapter-level, or differently-worded content outranks the specific, correctly-worded answer, because the systems score on vocabulary overlap, not on whether the content actually addresses the query. The other two (c18, c01) are not retrieval failures at all: the gold set itself is incomplete. In both cases the same fact appears twice in the corpus, once in its own section and once in a glossary or a sibling manual, and only one copy got judged, so a system that correctly finds the unjudged copy is penalized for it. That second pattern is worth fixing in the gold set before trusting any score that depends on these two queries.
 
 ---
 
@@ -345,7 +427,24 @@ Did the winner change between the shared corpus and yours?
 Why, or why not: what is different about the two collections (document length, vocabulary, identifiers, near-duplicates, how the queries were written), and which of your explanations did you test and which are guesses?
 Say what 20 queries on one side and your gold-set size on the other cannot support.
 
-TODO: write the cross-corpus comparison.
+I copied these rows from the shared-practice table in section 1 and the own table in section 4.
+
+| System | Shared MRR@10 (n=20) | Shared nDCG@10 | Own MRR@10 (n=37) | Own nDCG@10 |
+| --- | ---: | ---: | ---: | ---: |
+| bm25 | 0.507 | 0.518 | 0.602 | 0.622 |
+| dense | 0.562 | 0.480 | 0.710 | 0.707 |
+| hybrid | 0.471 | 0.443 | 0.715 | 0.731 |
+| rerank | 0.800 | 0.746 | 0.623 | 0.636 |
+
+The winner changed, though how far depends on what "winner" means here. On the shared practice queries, rerank was the only system distinguishable from any other: higher than dense and hybrid on all three scores, and higher than bm25 on MRR@10. On my corpus, the only distinguishable pair is hybrid over bm25, on recall@10 and nDCG@10. hybrid has the highest point estimates, but it is not distinguishable from dense or rerank, so I can say the reranker's clear lead disappeared and hybrid moved from last to first by point estimate, but not that hybrid beats every other system here.
+
+The clearest difference between the collections shows up in the per-class tables. On the shared corpus, bm25 and dense failed on complementary classes: bm25 had recall@10 of 1.000 on identifier queries and 0.000 on paraphrase queries, while dense had 0.214 and 0.595. On my corpus, neither system fails a whole class. bm25 reaches 0.750 recall@10 on paraphrase queries, and both reach 1.000 on identifier queries. That fits the guess in section 1 that RRF suffers when one input's ranking is close to noise for a class: on the shared corpus, hybrid landed between its two inputs, and on mine, where both inputs are usable everywhere, it is the one system distinguishable from bm25. The manuals' explanatory prose may share more everyday words with plain-language queries than regulation text does, which would explain why bm25 holds up on paraphrases here. I did not test either explanation; a fusion with a smaller k or weighted inputs, run on both corpora, would test the first.
+
+The reranker's collapse has no tested explanation either. Its overall deficit on my corpus comes from identifier queries (MRR@10 0.484 against hybrid's 0.850), where it moved judged relevant documents down. My documents are four-page parts of about 1,500 words, roughly 8,500 characters. `rerank.py` truncates each candidate's full document text to `PASSAGE_CHARS = 600` before sending it to Claude, so Claude sees only about 7 percent of each document, essentially the opening heading and first paragraph. This is confirmed, not a guess: for an identifier query naming a fact that sits past the opening of a part, Claude cannot see it when deciding how to reorder the 20 candidates, which plausibly explains the identifier-class collapse better than the class-mismatch alone does. The query classes also differ: my cross-cutting class has no equivalent on the shared corpus, and that is the one class where rerank has the highest point estimates on my corpus.
+
+The failure analysis and the ablation add one observation that applies to my corpus only. Both found generic chapter openings and scope statements outranking the specific answer (c26 in both, plus c27 and c03 in the failure analysis). Each manual has many such passages, and my four-page parts often contain one. I did not look for the same pattern on the shared corpus, so I cannot say whether it explains part of the difference.
+
+What the gold sets cannot support: the two corpora have different queries and different documents, so no paired interval compares them, and nothing here measures whether the reranker's gain really shrank between corpora rather than varying with the queries. Within each corpus, 20 practice queries give minimum detectable differences of 0.160 to 0.415, and my 37 give 0.106 to 0.270, so most gaps on either side are invisible. Per-class comparisons rest on 6 to 15 queries with no intervals. Every explanation in this section is a guess consistent with the numbers, not a tested claim.
 
 ---
 
@@ -407,6 +506,7 @@ Systems that do not call Claude, from traces/retrieval/ on the machine that last
 
 | Trace | System | Queries | Seconds | Milliseconds per query |
 | --- | --- | ---: | ---: | ---: |
+| traces/retrieval/own-own-ablation-dense_potion.jsonl | dense_potion | 37 | 0.03 | 0.8 |
 | traces/retrieval/own-own-bm25.jsonl | bm25 | 37 | 0.03 | 0.7 |
 | traces/retrieval/own-own-dense.jsonl | dense | 37 | 0.24 | 6.6 |
 | traces/retrieval/own-own-hybrid.jsonl | hybrid | 37 | 0.30 | 8.1 |
